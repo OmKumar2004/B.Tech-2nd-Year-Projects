@@ -1,0 +1,1028 @@
+#include <bits/stdc++.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <queue>
+using namespace std;
+
+int countOnce = 1;
+// Forward declarations
+class MetroStop;
+class MetroLine;
+class AVLNode;
+
+// MetroStop class
+class MetroStop
+{
+private:
+    std::string stopName;
+    MetroStop *nextStop;
+    MetroStop *prevStop;
+    MetroLine *line;
+    int fare;
+
+public:
+    MetroStop(std::string name, MetroLine *metroLine, int fare);
+
+    // Getter methods
+    std::string getStopName() const;
+    MetroStop *getNextStop() const;
+    MetroStop *getPrevStop() const;
+    MetroLine *getLine() const;
+    int getFare() const;
+
+    // Setter methods
+    void setNextStop(MetroStop *next);
+    void setPrevStop(MetroStop *prev);
+};
+
+MetroStop::MetroStop(std::string name, MetroLine *metroLine, int fare)
+{
+    stopName = name;
+    nextStop = nullptr;
+    prevStop = nullptr;
+    line = metroLine;
+    this->fare = fare;
+}
+
+std::string MetroStop::getStopName() const
+{
+    return stopName;
+}
+
+MetroStop *MetroStop::getNextStop() const
+{
+    return nextStop;
+}
+
+MetroStop *MetroStop::getPrevStop() const
+{
+    return prevStop;
+}
+
+MetroLine *MetroStop::getLine() const
+{
+    return line;
+}
+
+int MetroStop::getFare() const
+{
+    return fare;
+}
+
+void MetroStop::setNextStop(MetroStop *next)
+{
+    nextStop = next;
+}
+
+void MetroStop::setPrevStop(MetroStop *prev)
+{
+    prevStop = prev;
+}
+
+// MetroLine class
+class MetroLine
+{
+private:
+    std::string lineName;
+    MetroStop *node;
+
+public:
+    MetroLine(std::string name);
+
+    // Getter methods
+    std::string getLineName() const;
+    MetroStop *getNode() const;
+
+    // Setter methods
+    void setNode(MetroStop *node);
+
+    void populateLine(std::string filename);
+
+    // helper function
+    void printLine() const;
+    int getTotalStops() const;
+};
+
+MetroLine::MetroLine(std::string name)
+{
+    lineName = name;
+    node = nullptr;
+}
+
+std::string MetroLine::getLineName() const
+{
+    return lineName;
+}
+
+MetroStop *MetroLine::getNode() const
+{
+    return node;
+}
+
+void MetroLine::setNode(MetroStop *node)
+{
+    this->node = node;
+}
+
+void MetroLine::printLine() const
+{
+    MetroStop *stop = node;
+    while (stop != nullptr)
+    {
+        cout << stop->getStopName() << endl;
+        stop = stop->getNextStop();
+    }
+}
+
+int MetroLine::getTotalStops() const
+{
+    int count = 0;
+    MetroStop *eachStop = node;
+    while (eachStop != nullptr)
+    {
+        count++;
+        eachStop = eachStop->getNextStop();
+    }
+    return count;
+}
+
+void MetroLine::populateLine(std::string filename)
+{
+    // Read the file and populate the line
+    string lineName1 = filename.substr(0, filename.length() - 4);
+    // MetroLine* metroLine1 = new MetroLine(lineName1);
+    fstream fin;
+    fin.open(filename, ios::in);
+    string line;
+    string word;
+    string fare1;
+    int fare;
+    // vector<MetroStop*> stopsCollection;
+    while (getline(fin, line))
+    {
+        stringstream s(line);
+        vector<string> stations;
+        string name;
+        while (getline(s, word, ' '))
+        {
+            stations.push_back(word);
+        }
+        fare1 = stations.back();
+        while(fare1[fare1.length() - 1] == ',')
+        {
+            fare1 = fare1.substr(0, fare1.length() - 1);
+        }
+        fare = stoi(fare1);
+        stations.pop_back();
+        for (int i = 0; i < stations.size(); i++)
+        {
+            name = name + stations[i] + " ";
+        }
+        name = name.substr(0, name.length() - 1);
+        // cout << name << ".." << fare << endl;
+        MetroStop *newNode = new MetroStop(name, this, fare);
+        if (node == NULL)
+        {
+            setNode(newNode);
+        }
+        else
+        {
+            // MetroStop *curr = getNode();
+            // while (curr->getNextStop() != nullptr)
+            // {
+            //     curr = curr->getNextStop();
+            // }
+            // curr->setNextStop(newNode);
+            // newNode->setPrevStop(curr);
+            newNode->setNextStop(node);
+            node->setPrevStop(newNode);
+            setNode(newNode);
+        }
+        // stopsCollection.push_back(newNode);
+    }
+    // node=stopsCollection[0];
+    // if(stopsCollection[1]!=NULL){
+    //     stopsCollection[1]->setPrevStop(node);
+    // }
+    // for(int i=0;i<stopsCollection.size();i++){
+    //     if(i>0){
+    //         stopsCollection[i]->setPrevStop(stopsCollection[i-1]);
+    //     }
+    //     if(i+1<stopsCollection.size()){
+    //         stopsCollection[i]->setNextStop(stopsCollection[i+1]);
+    //     }
+    //     else{
+    //         stopsCollection[i]->setNextStop(NULL);
+    //     }
+    // }
+    fin.close();
+}
+
+// AVLNode class
+class AVLNode
+{
+private:
+    std::string stopName;
+    std::vector<MetroStop *> stops;
+    AVLNode *left;
+    AVLNode *right;
+    AVLNode *parent;
+
+public:
+    AVLNode(std::string name);
+
+    // Getter methods
+    std::string getStopName() const;
+    const std::vector<MetroStop *> &getStops() const;
+    AVLNode *getLeft() const;
+    AVLNode *getRight() const;
+    AVLNode *getParent() const;
+
+    // Setter methods
+    void addMetroStop(MetroStop *metroStop);
+    void setLeft(AVLNode *left);
+    void setRight(AVLNode *right);
+    void setParent(AVLNode *parent);
+};
+
+AVLNode::AVLNode(std::string name)
+{
+    stopName = name;
+    left = nullptr;
+    right = nullptr;
+    parent = NULL;
+}
+
+std::string AVLNode::getStopName() const
+{
+    return stopName;
+}
+
+const std::vector<MetroStop *> &AVLNode::getStops() const
+{
+    return stops;
+}
+
+AVLNode *AVLNode::getLeft() const
+{
+    return left;
+}
+
+AVLNode *AVLNode::getRight() const
+{
+    return right;
+}
+
+AVLNode *AVLNode::getParent() const
+{
+    return parent;
+}
+
+void AVLNode::setLeft(AVLNode *left)
+{
+    this->left = left;
+}
+
+void AVLNode::setRight(AVLNode *right)
+{
+    this->right = right;
+}
+
+void AVLNode::setParent(AVLNode *parent)
+{
+    this->parent = parent;
+}
+
+void AVLNode::addMetroStop(MetroStop *metroStop)
+{
+    stops.push_back(metroStop);
+}
+
+// AVLTree class
+class AVLTree
+{
+    // Define your AVLTree implementation here.
+private:
+    AVLNode *root;
+    // AVLNode *travelptr;   added here by myself
+
+public:
+    // getter methods
+    AVLNode *getRoot() const;
+
+    // setter methods
+    void setRoot(AVLNode *root);
+
+    // helper functions
+    int height(AVLNode *node);
+    int balanceFactor(AVLNode *node);
+    void rotateLeft(AVLNode *node);
+    void rotateRight(AVLNode *node);
+    void balance(AVLNode *node);
+    int stringCompare(string s1, string s2);
+    void insert(AVLNode *node, MetroStop *metroStop);
+    void populateTree(MetroLine *metroLine);
+    void inOrderTraversal(AVLNode *node);
+    int getTotalNodes(AVLNode *node);
+    AVLNode *searchStop(string stopName);
+    AVLNode *insert_Help(AVLNode *node, MetroStop *metroStop);
+};
+
+AVLNode *AVLTree::getRoot() const
+{
+    return root;
+}
+
+void AVLTree::setRoot(AVLNode *root)
+{
+    this->root = root;
+}
+
+int AVLTree::height(AVLNode *node)
+{
+    if (node == nullptr)
+    {
+        return 0;
+    }
+    return 1 + max(height(node->getRight()), height(node->getLeft()));
+}
+
+int AVLTree::stringCompare(string s1, string s2)
+{
+    // use strcmp
+
+    char *c1 = new char[s1.length() + 1];
+    strcpy(c1, s1.c_str());
+
+    char *c2 = new char[s2.length() + 1];
+    strcpy(c2, s2.c_str());
+
+    int result = strcmp(c1, c2);
+    return result;
+}
+
+int AVLTree::balanceFactor(AVLNode *node)
+{
+    if (node == NULL)
+    {
+        return 0;
+    }
+    return (height(node->getLeft()) - height(node->getRight()));
+}
+
+void AVLTree::rotateLeft(AVLNode *node)
+{
+    AVLNode *pointNode;
+    pointNode = node->getLeft();
+    // if(node==root){
+    //     node->setParent(NULL);
+    // }
+    if (node->getLeft() != NULL)
+        node->getLeft()->setParent(node->getParent());
+    node->setLeft(node->getLeft()->getRight());
+    node->setParent(pointNode);
+    if (node->getParent() != NULL)
+        node->getParent()->setRight(node);
+    if (node->getLeft() != NULL)
+        node->getLeft()->setParent(node);
+    pointNode->setRight(node);
+    if (node->getParent()->getParent() != NULL)
+    {
+        if (node->getParent()->getParent()->getRight() == node)
+        {
+            node->getParent()->getParent()->setRight(node->getParent());
+        }
+        else
+        {
+            node->getParent()->getParent()->setLeft(node->getParent());
+        }
+    }
+}
+
+void AVLTree::rotateRight(AVLNode *node)
+{
+    AVLNode *pointNode;
+    pointNode = node->getRight();
+    // if (node == root)
+    //     node->setParent(NULL);
+    if (node->getRight() != NULL)
+    {
+        node->getRight()->setParent(node->getParent());
+    }
+    node->setRight(node->getRight()->getLeft());
+    node->setParent(pointNode);
+    if (node->getParent() != NULL)
+    {
+        node->getParent()->setLeft(node);
+    }
+    if (node->getRight() != NULL)
+    {
+        node->getRight()->setParent(node);
+    }
+    pointNode->setLeft(node);
+    if (node->getParent()->getParent() != NULL)
+    {
+        if (node->getParent()->getParent()->getLeft() == node)
+        {
+            node->getParent()->getParent()->setLeft(node->getParent());
+        }
+        else
+        {
+            node->getParent()->getParent()->setRight(node->getParent());
+        }
+    }
+}
+
+void AVLTree::balance(AVLNode *node)
+{
+    if (node == nullptr)
+        return;
+    if (balanceFactor(node) == 2)
+    {
+        if (balanceFactor(node->getLeft()) == 1)
+        {
+            rotateLeft(node);
+        }
+        else if (balanceFactor(node->getLeft()) == -1)
+        {
+            rotateRight(node->getLeft());
+            rotateLeft(node);
+        }
+    }
+    else if (balanceFactor(node) == -2)
+    {
+        if (balanceFactor(node->getRight()) == -1)
+        {
+            rotateRight(node);
+        }
+        else if (balanceFactor(node->getRight()) == 1)
+        {
+            rotateLeft(node->getRight());
+            rotateRight(node);
+        }
+    }
+}
+
+void AVLTree::insert(AVLNode *node, MetroStop *metroStop)
+{
+    AVLNode *newNode = new AVLNode(metroStop->getStopName());
+    newNode->addMetroStop(metroStop);
+    if (root == nullptr)
+    {
+        root = newNode;
+        return;
+    }
+    AVLNode *temp = root;
+    do
+    {
+        if (stringCompare((metroStop->getStopName()), (temp->getStopName())) < 0)
+        {
+            if (temp->getLeft() == NULL)
+            {
+                temp->setLeft(newNode);
+                newNode->setParent(temp);
+                break;
+            }
+            else
+            {
+                temp = temp->getLeft();
+            }
+        }
+        else if (stringCompare((metroStop->getStopName()), (temp->getStopName())) > 0)
+        {
+            if (temp->getRight() == NULL)
+            {
+                temp->setRight(newNode);
+                newNode->setParent(temp);
+                break;
+            }
+            else
+            {
+                temp = temp->getRight();
+            }
+        }
+        else
+        {
+            temp->addMetroStop(metroStop);
+            break;
+        }
+    } while (1);
+    while (temp != NULL)
+    {
+        balance(temp);
+        temp = temp->getParent();
+    }
+}
+void AVLTree::populateTree(MetroLine *metroLine)
+{
+    MetroStop *stopData = metroLine->getNode();
+    while (stopData != nullptr)
+    {
+        AVLNode *node = new AVLNode(stopData->getStopName());
+        insert(node, stopData);
+        stopData = stopData->getNextStop();
+    }
+}
+
+void AVLTree::inOrderTraversal(AVLNode *node)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+    inOrderTraversal(node->getLeft());
+    cout << node->getStopName() << endl;
+    inOrderTraversal(node->getRight());
+}
+
+int AVLTree::getTotalNodes(AVLNode *node)
+{
+    if (node == nullptr)
+    {
+        return 0;
+    }
+    return 1 + getTotalNodes(node->getLeft()) + getTotalNodes(node->getRight());
+}
+
+AVLNode *AVLTree::searchStop(string stopName)
+{
+    if (root == nullptr)
+    {
+        return NULL;
+    }
+    AVLNode *temp = root;
+    while (temp != NULL)
+    {
+        if (stringCompare(stopName, (temp->getStopName())) < 0)
+        {
+            temp = temp->getLeft();
+        }
+        else if (stringCompare(stopName, (temp->getStopName())) > 0)
+        {
+            temp = temp->getRight();
+        }
+        else
+        {
+            return temp;
+        }
+    }
+    // if (temp == NULL)
+    // {
+    //     return NULL;
+    // }
+    return NULL;
+    // if(stringCompare(stopName,travelptr->getStopName())<0){
+    //     travelptr=travelptr->getLeft();
+    //     searchStop(stopName);
+    //     return travelptr;
+    // }
+    // else if(stringCompare(stopName,travelptr->getStopName())>0){
+    //     travelptr=travelptr->getRight();
+    //     searchStop(stopName);
+    //     return travelptr;
+    // }
+    // else{
+    //     return root;
+    // }
+}
+
+// Trip class
+class Trip
+{
+private:
+    MetroStop *node;
+    Trip *prev;
+
+public:
+    Trip(MetroStop *metroStop, Trip *previousTrip);
+
+    // Getter methods
+    MetroStop *getNode() const;
+    Trip *getPrev() const;
+};
+
+Trip::Trip(MetroStop *metroStop, Trip *previousTrip)
+{
+    node = metroStop;
+    prev = previousTrip;
+}
+
+MetroStop *Trip::getNode() const
+{
+    return node;
+}
+
+Trip *Trip::getPrev() const
+{
+    return prev;
+}
+
+// Exploration class is a queue that stores unexplored Trip objects
+class Exploration
+{
+private:
+    std::queue<Trip *> trips;
+
+public:
+    Exploration();
+
+    // Getter methods
+    std::queue<Trip *> getTrips() const;
+
+    // Setter methods
+    void enqueue(Trip *trip);
+    Trip *dequeue();
+    bool isEmpty() const;
+};
+
+Exploration::Exploration()
+{
+}
+
+std::queue<Trip *> Exploration::getTrips() const
+{
+    return trips;
+}
+
+void Exploration::enqueue(Trip *trip)
+{
+    trips.push(trip);
+}
+
+Trip *Exploration::dequeue()
+{
+    if (trips.empty())
+    {
+        return nullptr;
+    }
+    Trip *trip = trips.front();
+    trips.pop();
+    cout << "Dequeued: " << trip->getNode()->getStopName() << endl;
+    return trip;
+}
+
+bool Exploration::isEmpty() const
+{
+    return trips.empty();
+}
+
+class Path
+{
+private:
+    std::vector<MetroStop *> stops;
+    int totalFare;
+
+public:
+    Path();
+
+    // Getter methods
+    std::vector<MetroStop *> getStops() const;
+    int getTotalFare() const;
+
+    // Setter methods
+    void addStop(MetroStop *stop);
+    void setTotalFare(int fare);
+
+    // helper functions
+    void printPath() const;
+};
+
+Path::Path()
+{
+    totalFare = 0;
+}
+
+std::vector<MetroStop *> Path::getStops() const
+{
+    return stops;
+}
+
+int Path::getTotalFare() const
+{
+    return totalFare;
+}
+
+void Path::addStop(MetroStop *stop)
+{
+    stops.push_back(stop);
+}
+
+void Path::setTotalFare(int fare)
+{
+    totalFare = fare;
+}
+
+void Path::printPath() const
+{
+    for (auto stop : stops)
+    {
+        cout << stop->getStopName() << endl;
+    }
+}
+
+// PathFinder class
+class PathFinder
+{
+private:
+    AVLTree *tree;
+    std::vector<MetroLine *> lines;
+
+public:
+    PathFinder(AVLTree *avlTree, const std::vector<MetroLine *> &metroLines);
+    void createAVLTree();
+    Path *findPath(std::string origin, std::string destination);
+
+    // Getter methods
+    AVLTree *getTree() const;
+    const std::vector<MetroLine *> &getLines() const;
+
+    void setTree(AVLTree *createdTree);
+    int JunctionCount(MetroStop *jnCheck)
+    {
+        AVLNode *required = tree->searchStop(jnCheck->getStopName());
+        return (required->getStops()).size();
+    }
+    vector<MetroStop *> junctionVector(MetroStop *firstEncounter)
+    {
+        AVLNode *rqNode = tree->searchStop(firstEncounter->getStopName());
+        return rqNode->getStops();
+    }
+    vector<MetroStop *> existingJunction;
+    bool isPresent(MetroStop *goForChecking)
+    {
+        for (int j = 0; j < existingJunction.size(); j++)
+        {
+            if (goForChecking->getStopName() == existingJunction[j]->getStopName())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    Path* OptimisedPath(vector<Trip*>dummy,string destination);
+};
+
+PathFinder::PathFinder(AVLTree *avlTree, const std::vector<MetroLine *> &metroLines)
+{
+    tree = avlTree;
+    lines = metroLines;
+}
+
+AVLTree *PathFinder::getTree() const
+{
+    return tree;
+}
+void PathFinder::setTree(AVLTree *createdTree)
+{
+    this->tree = createdTree;
+}
+const std::vector<MetroLine *> &PathFinder::getLines() const
+{
+    return lines;
+}
+
+void PathFinder::createAVLTree()
+{
+    AVLTree *tree1 = new AVLTree();
+    tree1->setRoot(nullptr);
+    for (auto line : lines)
+    {
+        if (tree1->getRoot() == nullptr)
+        {
+            tree1->setRoot(new AVLNode(line->getNode()->getStopName()));
+        }
+        tree1->populateTree(line);
+    }
+    setTree(tree1);
+    // AVLNode* checkNode = tree->searchStop("Nawad");
+    // if(checkNode!=NULL){
+    //     cout<<checkNode->getStopName()<<endl;
+    // }
+    // else{
+    //     cout<<"Not Present!!"<<endl;
+    // }
+}
+
+Path *PathFinder::OptimisedPath(vector<Trip *> dummy, string destination)
+{
+    vector<Path*> Optimising;
+    for (int i = 0; i < dummy.size(); i++)
+    {
+        Path *FinalFlow = new Path();
+        string you_dest = destination;
+        vector<MetroStop *> final;
+        int fare = 0;
+        int count = 0;
+        while (dummy[i] != NULL)
+        {
+            vector<MetroStop *> temp;
+            // cout<<successful->getNode()->getStopName()<<endl;
+            bool flag1 = false;
+            MetroStop *lastTrip = dummy[i]->getNode();
+            while (lastTrip != NULL)
+            {
+                temp.push_back(lastTrip);
+                if (lastTrip->getStopName() == you_dest)
+                {
+                    flag1 = true;
+                    break;
+                }
+                lastTrip = lastTrip->getNextStop();
+            }
+            if (!flag1)
+            {
+                temp.clear();
+                lastTrip = dummy[i]->getNode();
+                while (lastTrip->getStopName() != you_dest)
+                {
+                    temp.push_back(lastTrip);
+                    lastTrip = lastTrip->getPrevStop();
+                }
+                temp.push_back(lastTrip);
+            }
+            fare += abs(temp[0]->getFare() - temp[temp.size() - 1]->getFare());
+            if (count > 0)
+            {
+                temp.pop_back();
+            }
+            for (int k = temp.size() - 1; k >= 0; k--)
+            {
+                final.push_back(temp[k]);
+            }
+            you_dest = dummy[i]->getNode()->getStopName();
+            dummy[i] = dummy[i]->getPrev();
+            count++;
+        }
+        for (auto it : final)
+        {
+            FinalFlow->addStop(it);
+        }
+        FinalFlow->setTotalFare(fare);
+        // for(auto it:final){
+        //     cout << it << endl;
+        // }
+        Optimising.push_back(FinalFlow);
+    }
+    int minimum1= Optimising[0]->getTotalFare();
+    int key1=0;
+    for(int j=0;j<Optimising.size();j++){
+        // cout<<Optimising[j]->getTotalFare()<<endl;
+        if(minimum1>Optimising[j]->getTotalFare()){
+            minimum1=Optimising[j]->getTotalFare();
+            key1=j;
+        }
+    }
+
+    int minimum2= Optimising[0]->getStops().size();
+    int key2=0;
+    // for(int j=0;j<Optimising.size();j++){
+    //     cout<<Optimising[j]->getStops().size()<<endl;
+    //     if(minimum2>Optimising[j]->getStops().size()){
+    //         minimum2=Optimising[j]->getStops().size();
+    //         key2=j;
+    //     }
+    // }
+    int minimumOP=Optimising[key1]->getStops().size();
+    for(int j=0;j<Optimising.size();j++){
+        // cout<<Optimising[j]->getTotalFare()<<"___"<<Optimising[j]->getStops().size()<<endl;
+        if(Optimising[key1]->getTotalFare()==Optimising[j]->getTotalFare()){
+            if(minimumOP>Optimising[j]->getStops().size()){
+                minimumOP=Optimising[j]->getStops().size();
+                key1=j;
+            }
+        }
+    }
+    // cout<<Optimising[key1]->getTotalFare()<<"...."<<Optimising[key1]->getStops().size()<<"...."<<endl;
+    return Optimising[key1];
+}
+
+Path *PathFinder::findPath(std::string origin, std::string destination)
+{
+    vector<Trip*> allSuccessfuls;
+    Trip *successful = NULL;
+    int i;
+    AVLTree *searchTree = getTree();
+    AVLNode *originNode = searchTree->searchStop(origin);
+    AVLNode *destinationNode = searchTree->searchStop(destination);
+    vector<MetroStop *> originStop = originNode->getStops();
+
+    // for(auto it:originStop){
+    //     cout << it->getStopName() << endl;
+    // }
+    // MetroLine *originLine = originStop[0]->getLine();
+    Exploration *makeQueue = new Exploration();
+    // cout<<JunctionCount(originStop[0])<<endl;
+    if (JunctionCount(originStop[0]) > 1)
+    {
+        // cout<<"!IST342  "<<endl;
+        existingJunction.push_back(originStop[0]);
+        for (int j = 0; j < originStop.size(); j++)
+        {
+            // MetroStop *changingLine = originStop[j];
+            Trip *t = new Trip(originStop[j], NULL);
+            makeQueue->enqueue(t);
+        }
+    }
+    else
+    {
+        // cout<<"!ST121  "<<endl;
+        Trip *t = new Trip(originStop[0], NULL);
+        makeQueue->enqueue(t);
+    }
+
+    while (makeQueue->isEmpty() == false)
+    {
+        Trip *tt = makeQueue->dequeue();
+        // cout<<"!ST"<<endl;
+        MetroLine *line = tt->getNode()->getLine();
+        MetroStop *travel = line->getNode();
+        while (travel != tt->getNode())
+        {
+            travel = travel->getNextStop();
+        }
+        // cout<<"!ST"<<endl;
+        MetroStop *backTravel = travel;
+        bool flag = false;
+        // cout<<tt->getNode()->getStopName()<<"..."<<endl;
+        while (travel != NULL)
+        {
+            // cout<<travel->getStopName()<<"____";
+            if (travel->getStopName() == destinationNode->getStopName())
+            {
+                flag = true;
+                // cout<<"!STfoug"<<endl;
+                break;
+            }
+            // cout<<"!ST11"<<endl;
+            if (JunctionCount(travel) > 1 && (isPresent(travel)==false))
+            {
+                existingJunction.push_back(travel);
+                vector<MetroStop*> temporary = junctionVector(travel);
+                vector<MetroStop*> temporaryUseful;
+                for(int k=0;k<temporary.size();k++){
+                    if(temporary[k]->getLine()->getLineName()!=travel->getLine()->getLineName()){
+                        temporaryUseful.push_back(temporary[k]);
+                    }
+                }
+                for (int j = 0; j < JunctionCount(travel) - 1; j++)
+                {
+
+                    MetroStop *changingLine = temporaryUseful[j];
+                    Trip *ttt1 = new Trip(changingLine, tt);
+                    makeQueue->enqueue(ttt1);
+                }
+                // cout<<"!ST12"<<endl;
+            }
+            // cout<<"!St"<<endl;
+            travel = travel->getNextStop();
+        }
+        // cout<<endl;
+        if (flag == true)
+        {
+            successful = tt;
+            allSuccessfuls.push_back(tt);
+            // break;
+        }
+        // cout<<"!ST01"<<endl;
+        bool flag0=false;
+        while (backTravel != NULL)
+        {
+            // cout<<backTravel->getStopName()<<"____";
+            if (backTravel->getStopName() == destinationNode->getStopName())
+            {
+                flag0 = true;
+
+                break;
+            }
+            if (JunctionCount(backTravel) > 1 && (isPresent(backTravel)==false))
+            {
+                existingJunction.push_back(backTravel);
+                vector<MetroStop*> temporary = junctionVector(backTravel);
+                vector<MetroStop*> temporaryUseful;
+                for(int k=0;k<temporary.size();k++){
+                    if(temporary[k]->getLine()->getLineName()!=backTravel->getLine()->getLineName()){
+                        temporaryUseful.push_back(temporary[k]);
+                    }
+                }
+                for (int j = 0; j < JunctionCount(backTravel) - 1; j++)
+                {
+                    MetroStop *changingLine = temporaryUseful[j];
+                    Trip *ttt1 = new Trip(changingLine, tt);
+                    makeQueue->enqueue(ttt1);
+                }
+            }
+            backTravel = backTravel->getPrevStop();
+        }
+        // cout<<endl;
+        if (flag0 == true  && flag==false)
+        {
+            successful = tt;
+            allSuccessfuls.push_back(tt);
+            // break;
+        }
+    }
+    return OptimisedPath(allSuccessfuls,destination);
+}
+
+vector<MetroLine *> lines;
